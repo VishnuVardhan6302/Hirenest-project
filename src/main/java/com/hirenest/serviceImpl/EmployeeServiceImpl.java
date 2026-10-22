@@ -13,20 +13,25 @@ import com.hirenest.repository.EmployeeRepository;
 import com.hirenest.service.EmployeeService;
 import com.hirenest.entity.Domain;
 import com.hirenest.repository.DomainRepository;
-
+import com.hirenest.entity.EmploymentDetails;
+import com.hirenest.repository.EmploymentDetailsRepository;
+import org.springframework.transaction.annotation.Transactional;
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final DomainRepository domainRepository;
+    private final EmploymentDetailsRepository employmentDetailsRepository;
 
     public EmployeeServiceImpl(
-            EmployeeRepository employeeRepository,
-            DomainRepository domainRepository) {
+        EmployeeRepository employeeRepository,
+        DomainRepository domainRepository,
+        EmploymentDetailsRepository employmentDetailsRepository) {
 
-        this.employeeRepository = employeeRepository;
-        this.domainRepository = domainRepository;
-    }
+    this.employeeRepository = employeeRepository;
+    this.domainRepository = domainRepository;
+    this.employmentDetailsRepository = employmentDetailsRepository;
+}
 
     @Override
     public EmployeeResponse createEmployee(EmployeeRequest request) {
@@ -34,14 +39,14 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (employeeRepository.existsByEmployeeId(request.getEmployeeId())) {
             throw new DuplicateResourceException(
                     "Employee ID already exists: "
-                            + request.getEmployeeId()
+                    + request.getEmployeeId()
             );
         }
 
         if (employeeRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateResourceException(
                     "Email already exists: "
-                            + request.getEmail()
+                    + request.getEmail()
             );
         }
 
@@ -62,16 +67,25 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Domain domain = domainRepository.findByName(request.getDomainName())
                 .orElseThrow(() ->
-                        new RuntimeException(
-                                "Domain not found: " + request.getDomainName()
-                        )
+                    new RuntimeException(
+                        "Domain not found: " + request.getDomainName()
+                    )
                 );
 
         employee.setDomain(domain);
 
         Employee savedEmployee = employeeRepository.save(employee);
 
-        return convertToResponse(savedEmployee);
+EmploymentDetails details = new EmploymentDetails();
+details.setEmployee(savedEmployee);
+details.setEmploymentType(savedEmployee.getEmploymentType());
+details.setDomain(domain);
+details.setJoiningDate(savedEmployee.getJoiningDate());
+details.setStatus(savedEmployee.getStatus());
+
+employmentDetailsRepository.save(details);
+
+return convertToResponse(savedEmployee);
     }
 
     @Override
@@ -97,9 +111,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Employee not found with id: " + id
-                        )
+                    new ResourceNotFoundException(
+                        "Employee not found with id: " + id
+                    )
                 );
 
         return convertToResponse(employee);
@@ -112,9 +126,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Employee not found with id: " + id
-                        )
+                    new ResourceNotFoundException(
+                        "Employee not found with id: " + id
+                    )
                 );
 
         employee.setFullName(request.getFullName());
@@ -128,9 +142,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Domain domain = domainRepository.findByName(request.getDomainName())
                 .orElseThrow(() ->
-                        new RuntimeException(
-                                "Domain not found: " + request.getDomainName()
-                        )
+                    new RuntimeException(
+                        "Domain not found: " + request.getDomainName()
+                    )
                 );
 
         employee.setDomain(domain);
@@ -141,7 +155,23 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Employee updatedEmployee = employeeRepository.save(employee);
 
-        return convertToResponse(updatedEmployee);
+EmploymentDetails details = employmentDetailsRepository
+        .findAll()
+        .stream()
+        .filter(item -> item.getEmployee().getId()
+                .equals(updatedEmployee.getId()))
+        .findFirst()
+        .orElseGet(EmploymentDetails::new);
+
+details.setEmployee(updatedEmployee);
+details.setEmploymentType(updatedEmployee.getEmploymentType());
+details.setDomain(domain);
+details.setJoiningDate(updatedEmployee.getJoiningDate());
+details.setStatus(updatedEmployee.getStatus());
+
+employmentDetailsRepository.save(details);
+
+return convertToResponse(updatedEmployee);
     }
 
     @Override
@@ -149,9 +179,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Employee not found with id: " + id
-                        )
+                    new ResourceNotFoundException(
+                        "Employee not found with id: " + id
+                    )
                 );
 
         // Instead of permanently deleting the employee,
@@ -160,7 +190,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         employeeRepository.save(employee);
     }
-
+    
     @Override
     public List<EmployeeResponse> getInternEmployees() {
 

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import com.hirenest.dto.EmployeeRequest;
 import com.hirenest.dto.EmployeeResponse;
 import com.hirenest.service.EmployeeService;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/employees")
@@ -20,6 +21,7 @@ public class EmployeeController {
         this.employeeService = employeeService;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
     @PostMapping
     public ResponseEntity<EmployeeResponse> createEmployee(
             @RequestBody EmployeeRequest request) {
@@ -30,6 +32,7 @@ public class EmployeeController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
     @GetMapping
     public ResponseEntity<List<EmployeeResponse>> getAllEmployees() {
 
@@ -38,6 +41,7 @@ public class EmployeeController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
     @GetMapping("/former")
     public ResponseEntity<List<EmployeeResponse>> getFormerEmployees() {
 
@@ -46,6 +50,7 @@ public class EmployeeController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
     @GetMapping("/{id}")
     public ResponseEntity<EmployeeResponse> getEmployeeById(
             @PathVariable Long id) {
@@ -55,6 +60,7 @@ public class EmployeeController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
     @PutMapping("/{id}")
     public ResponseEntity<EmployeeResponse> updateEmployee(
             @PathVariable Long id,
@@ -65,6 +71,7 @@ public class EmployeeController {
         );
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEmployee(
             @PathVariable Long id) {
@@ -73,6 +80,8 @@ public class EmployeeController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
     @GetMapping("/interns")
     public List<EmployeeResponse> getInternEmployees() {
         return employeeService.getInternEmployees();

@@ -1,9 +1,13 @@
+
 package com.hirenest.entity;
 
 import java.time.LocalDate;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "employees")
@@ -41,22 +45,16 @@ public class Employee {
     @Column(nullable = false)
     private String status;
 
-    @ManyToOne
-    @JoinColumn(name = "domain_id")
-    private Domain domain;
-
     private String employmentType;
 
     private LocalDate joiningDate;
 
-    public void setDomainName(String name) {
-        if (this.domain == null) {
-            this.domain = new Domain();
-        }
+    @ManyToOne
+    @JoinColumn(name = "domain_id")
+    private Domain domain;
 
-        this.domain.setName(name);
-    }
-
+    // Returns the domain name from the related Domain entity.
+    @Transient
     public String getDomainName() {
         return domain != null ? domain.getName() : null;
     }

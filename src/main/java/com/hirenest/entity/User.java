@@ -1,5 +1,5 @@
-package com.hirenest.entity;
 
+package com.hirenest.entity;
 
 import java.time.LocalDateTime;
 
@@ -21,30 +21,71 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(nullable = false)
+    private String fullName;
+
     @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
     private String password;
 
+    // Default role for newly created users
     @Column(nullable = false)
-    private String role;
+    private String role = "USER";
 
     @Column(nullable = false)
-    private String status;
+    private String status = "ACTIVE";
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Column(nullable = false)
+    private boolean emailVerified = false;
+
+    @Column(nullable = false)
+    private boolean mustChangePassword = false;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
 
+    // Constructor with the actual full name
+    public User(
+            String username,
+            String fullName,
+            String email,
+            String password,
+            String role) {
+
+        this.username = username;
+        this.fullName = fullName;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.status = "ACTIVE";
+        this.active = true;
+        this.emailVerified = false;
+        this.mustChangePassword = false;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }
